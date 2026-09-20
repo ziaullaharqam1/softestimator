@@ -1,0 +1,22 @@
+{
+  "aws": {
+    "t3.small": 0.0251,
+    "t3.medium": 0.0502,
+    "t3.large": 0.1003,
+    "m6i.large": 0.1177,
+    "m6i.xlarge": 0.2354,
+    "m6i.2xlarge": 0.4708,
+    "m6i.4xlarge": 0.9416,
+    "m6i.8xlarge": 1.8832,
+    "r6i.large": 0.1551,
+    "r6i.xlarge": 0.3102,
+    "r6i.2xlarge": 0.6204,
+    "r6i.4xlarge": 1.2408,
+    "r6i.8xlarge": 2.4816
+  },
+  "awsGp3GbMonth": 0.0968,
+  "awsNatHour": 0.0528,
+  "awsEgressGb": 0.09,
+  "awsEksHour": 0.1,
+  "publicationDate": "2026-09-10T19:55:14Z"
+}
