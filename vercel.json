@@ -6,7 +6,16 @@
     "api/live-prices.js": {
       "includeFiles": "server/**",
       "maxDuration": 60
+    },
+    "api/estimates/file.js": {
+      "includeFiles": "estimates/**"
     }
   },
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/estimates", "destination": "/api/estimates/index" },
+    { "source": "/estimates/login", "destination": "/api/estimates/login" },
+    { "source": "/estimates/logout", "destination": "/api/estimates/logout" },
+    { "source": "/estimates/files/:name", "destination": "/api/estimates/file?name=:name" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }
