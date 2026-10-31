@@ -45,7 +45,8 @@ function blockHtml(b: Block): string {
       return `<div class="kpis">${b.items.map((k) => `<div class="kpi"><div class="kl">${esc(k.label)}</div><div class="kv">${esc(k.value)}</div><div class="ks">${esc(k.sub ?? "")}</div></div>`).join("")}</div>`;
     case "table": {
       const num = (c: string) => NUMERIC.test(c);
-      const row = (r: string[], tag: "td" | "th") => `<tr>${r.map((c) => `<${tag} class="${tag === "td" && num(c) ? "r" : ""}">${esc(c)}</${tag}>`).join("")}</tr>`;
+      const numCol = b.headers.map((_, i) => b.rows.length > 0 && b.rows.every((r) => num(r[i] ?? "") || (r[i] ?? "") === ""));
+      const row = (r: string[], tag: "td" | "th") => `<tr>${r.map((c, i) => `<${tag} class="${(tag === "td" && num(c)) || (tag === "th" && numCol[i]) ? "r" : ""}">${esc(c)}</${tag}>`).join("")}</tr>`;
       return `<table><thead>${row(b.headers, "th")}</thead><tbody>${b.rows.map((r) => row(r, "td")).join("")}${b.total ? `<tr class="total">${b.total.map((c) => `<td class="${num(c) ? "r" : ""}">${esc(c)}</td>`).join("")}</tr>` : ""}</tbody></table>`;
     }
     case "images":
@@ -89,7 +90,7 @@ ul{margin:0 0 8px;padding-left:20px}li{margin:0 0 8px;line-height:1.42}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
 .kpi{border:1px solid ${BRAND.rule};border-left:5px solid ${BRAND.green};border-radius:8px;padding:10px 14px}
 .kl{font-size:11px;color:${BRAND.muted};text-transform:uppercase;letter-spacing:.8px}.kv{font-size:22px;font-weight:700;margin:4px 0 2px;color:${BRAND.navy}}.ks{font-size:11px;color:${BRAND.muted}}
-table{border-collapse:collapse;width:100%;font-size:11px;margin-bottom:8px}th{background:${BRAND.navy};color:#fff;text-align:left;padding:5px 7px;font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:11px;margin-bottom:8px}th{background:${BRAND.navy};color:#fff;text-align:left;padding:5px 7px;font-weight:600}th.r{text-align:right}
 td{padding:4px 7px;border-bottom:1px solid ${BRAND.rule};vertical-align:top}tr:nth-child(even) td{background:#F7F9FB}
 td.r{text-align:right;white-space:nowrap}tr.total td{font-weight:700;color:${BRAND.navy};background:#EEF6E8!important;border-top:2px solid ${BRAND.green}}
 .shots{display:grid;grid-template-columns:1fr 1fr;gap:24px;height:100%}figure{margin:0;display:flex;flex-direction:column;align-items:center}
@@ -213,8 +214,9 @@ async function drawBlock(pptx: PptxGenJS, slide: PSlide, b: Block, x: number, y:
       const height = (p: number) => all.reduce((a, r) => a + rowH(r, p), 0);
       while (pt > 7 && height(pt) > room) pt -= 1;
       const isNum = (s: string) => NUMERIC.test(s);
+      const numCol = b.headers.map((_, i) => b.rows.length > 0 && b.rows.every((r) => isNum(r[i] ?? "") || (r[i] ?? "") === ""));
       const rows: PptxGenJS.TableRow[] = all.map((r, ri) =>
-        r.map((cell) => {
+        r.map((cell, ci) => {
           const head = ri === 0;
           const total = !!b.total && ri === all.length - 1;
           return {
@@ -223,7 +225,7 @@ async function drawBlock(pptx: PptxGenJS, slide: PSlide, b: Block, x: number, y:
               bold: head || total,
               color: head ? "FFFFFF" : total ? C.navy : C.ink2,
               fill: { color: head ? C.navy : total ? C.totalBg : ri % 2 === 0 ? C.zebra : "FFFFFF" },
-              align: !head && isNum(cell) ? "right" : "left",
+              align: (head && numCol[ci]) || (!head && isNum(cell)) ? "right" : "left",
             },
           };
         })

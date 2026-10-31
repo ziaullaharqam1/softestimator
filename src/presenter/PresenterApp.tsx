@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type { ArchitectureStyle } from "../architecture";
 import { FALLBACK_RATES, fetchLivePriceBook } from "../engine/livePricing";
 import type { LivePriceBook } from "../engine/types";
-import { FILTERS, HOSTING_LABEL, PRESETS, SLIDE_SECTIONS, type FilterKey, type Hosting, type Selections, type SlideSection } from "./catalog";
+import { FILTERS, PRESETS, SHORT, SLIDE_SECTIONS, TARGET_LABEL, type FilterKey, type Selections, type SlideSection, type Target } from "./catalog";
 import { aed, buildDeck, type Screenshot } from "./deck";
 import { deckHtml, downloadPdf, downloadPptx, type Logo } from "./render";
 
@@ -41,7 +41,7 @@ const allSections = Object.fromEntries(SLIDE_SECTIONS.map(([k]) => [k, true])) a
 
 export default function PresenterApp({ architecture, onArchitecture }: { architecture: ArchitectureStyle; onArchitecture: (a: ArchitectureStyle) => void }) {
   const preset = PRESETS.find((p) => p.architecture === architecture) ?? PRESETS[0];
-  const [hosting, setHosting] = useState<Hosting>(preset.hosting);
+  const [hosting, setHosting] = useState<Target>(preset.hosting);
   const [sel, setSel] = useState<Selections>(preset.selections);
   const [sections, setSections] = useState(allSections);
   const [projectName, setProjectName] = useState("");
@@ -187,6 +187,7 @@ export default function PresenterApp({ architecture, onArchitecture }: { archite
 
   const groups = ["Application", "Data", "Network & edge", "Platform & operations", "Delivery"] as const;
   const c = deck.costs;
+  const ref = deck.reference;
 
   return (
     <div className="grid planner-grid presenter">
@@ -215,12 +216,20 @@ export default function PresenterApp({ architecture, onArchitecture }: { archite
           </div>
           <div>
             <label htmlFor="p-host">Target hosting</label>
-            <select id="p-host" value={hosting} onChange={(e) => setHosting(e.target.value as Hosting)}>
-              {(Object.keys(HOSTING_LABEL) as Hosting[]).map((h) => (
-                <option key={h} value={h}>
-                  {HOSTING_LABEL[h]}
-                </option>
-              ))}
+            <select id="p-host" value={hosting} onChange={(e) => setHosting(e.target.value as Target)}>
+              <optgroup label="Cloud">
+                <option value="aws">{TARGET_LABEL.aws}</option>
+                <option value="azure">{TARGET_LABEL.azure}</option>
+                <option value="gcp">{TARGET_LABEL.gcp}</option>
+              </optgroup>
+              <optgroup label="Own servers">
+                <option value="onprem">{TARGET_LABEL.onprem}</option>
+              </optgroup>
+              <optgroup label="Managed platforms">
+                <option value="vercel">{TARGET_LABEL.vercel}</option>
+                <option value="lovable">{TARGET_LABEL.lovable}</option>
+              </optgroup>
+              <option value="all">{TARGET_LABEL.all}</option>
             </select>
           </div>
         </div>
@@ -350,15 +359,15 @@ export default function PresenterApp({ architecture, onArchitecture }: { archite
       <main>
         <div className="kpis">
           <div className="kpi">
-            <div className="v">{aed(c.monthly[hosting])}</div>
-            <div className="l">Monthly run · {hosting.toUpperCase()}</div>
+            <div className="v">{aed(c.monthly[ref])}</div>
+            <div className="l">Monthly run · {SHORT[ref]}{hosting === "all" ? " (lowest cloud)" : ""}</div>
           </div>
           <div className="kpi">
-            <div className="v">{aed(c.deliveryAed + c.oneTimeInfra[hosting])}</div>
+            <div className="v">{aed(c.deliveryAed + c.oneTimeInfra[ref])}</div>
             <div className="l">One-time</div>
           </div>
           <div className="kpi">
-            <div className="v">{aed(c.tco3[hosting])}</div>
+            <div className="v">{aed(c.tco3[ref])}</div>
             <div className="l">3-year hosting TCO</div>
           </div>
           <div className="kpi">

@@ -18,11 +18,13 @@ function box(x: number, y: number, w: number, h: number, title: string, sub = ""
 const arrow = (x1: number, y1: number, x2: number, y2: number) =>
   `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${BRAND.muted}" stroke-width="1.5" marker-end="url(#ah)"/>`;
 
-const RUNTIME: Record<Hosting, string> = { aws: "EKS", azure: "AKS", gcp: "GKE", onprem: "Kubernetes (RKE2)" };
-const VMS: Record<Hosting, string> = { aws: "EC2", azure: "Azure VMs", gcp: "Compute Engine", onprem: "Proxmox VMs" };
-const DR_SITE: Record<Hosting, string> = { aws: "me-south-1", azure: "UAE Central", gcp: "me-central2", onprem: "Secondary DC" };
+type View = Hosting | "generic";
+const RUNTIME: Record<View, string> = { aws: "EKS", azure: "AKS", gcp: "GKE", onprem: "Kubernetes (RKE2)", vercel: "Vercel Functions", lovable: "Supabase Edge Functions", generic: "Managed Kubernetes" };
+const VMS: Record<View, string> = { aws: "EC2", azure: "Azure VMs", gcp: "Compute Engine", onprem: "Proxmox VMs", vercel: "Vercel Functions", lovable: "Lovable hosting", generic: "virtual machines" };
+const DR_SITE: Record<View, string> = { aws: "me-south-1", azure: "UAE Central", gcp: "me-central2", onprem: "Secondary DC", vercel: "Vendor multi-region", lovable: "Vendor backups", generic: "second region / site" };
+const MANAGED_VIEW = (h: View) => h === "vercel" || h === "lovable";
 
-export function architectureSvg(arch: ArchitectureStyle, h: Hosting, s: Selections): Extract<Block, { kind: "diagram" }> {
+export function architectureSvg(arch: ArchitectureStyle, h: View, s: Selections): Extract<Block, { kind: "diagram" }> {
   const W = 1180;
   const H = 520;
   const svc = (k: Exclude<FilterKey, "aiTooling">) => (s[k] === "none" ? "" : serviceName(k, s[k], h));
@@ -49,7 +51,16 @@ export function architectureSvg(arch: ArchitectureStyle, h: Hosting, s: Selectio
 
   // Application tier
   g.push(`<rect x="440" y="20" width="420" height="340" rx="10" fill="#F3FAEE" stroke="${BRAND.green}" stroke-dasharray="5 4"/>`);
-  if (arch === "microservices") {
+  if (MANAGED_VIEW(h)) {
+    const vercel = h === "vercel";
+    g.push(`<text x="454" y="42" font-size="12" font-weight="600" fill="#2C6B0F">${vercel ? "Vercel project · serverless + edge" : "Lovable app · Supabase project"}</text>`);
+    g.push(box(460, 60, 380, 56, vercel ? "Next.js app (SSR + static)" : "React app (Lovable-generated)", vercel ? "Edge Network · ISR cache" : "Lovable hosting · CDN"));
+    g.push(box(460, 140, 380, 60, vercel ? "API routes / serverless functions" : "Supabase Edge Functions", `TypeScript${vercel ? " / Python" : ""} · replaces ${lbl("backend")}`));
+    g.push(box(460, 225, 180, 52, "Identity", svc("identity")));
+    g.push(box(660, 225, 180, 52, "Observability", vercel ? "Vercel Observability" : "Supabase logs"));
+    g.push(box(460, 295, 380, 46, "Git-based deploys", vercel ? "Preview per pull request" : "Lovable editor + GitHub sync"));
+    g.push(arrow(400, 234, 460, 88), arrow(650, 116, 650, 140));
+  } else if (arch === "microservices") {
     g.push(`<text x="454" y="42" font-size="12" font-weight="600" fill="#2C6B0F">${esc(RUNTIME[h])} cluster · private network · 3 zones</text>`);
     g.push(box(460, 60, 180, 52, s.apiGateway === "none" ? "Ingress" : "API gateway", svc("apiGateway") || "Ingress controller"));
     g.push(box(660, 60, 180, 52, "Identity", svc("identity")));

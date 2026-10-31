@@ -1,12 +1,59 @@
 import type { ArchitectureStyle } from "../architecture";
 
-export type Hosting = "aws" | "azure" | "gcp" | "onprem";
+export type Hosting = "aws" | "azure" | "gcp" | "onprem" | "vercel" | "lovable";
+/** What the user picks: one hosting option, or every option side by side. */
+export type Target = Hosting | "all";
+
+export const HOSTINGS: Hosting[] = ["aws", "azure", "gcp", "onprem", "vercel", "lovable"];
+export const CLOUDS: Hosting[] = ["aws", "azure", "gcp"];
+export const MANAGED: Hosting[] = ["vercel", "lovable"];
 
 export const HOSTING_LABEL: Record<Hosting, string> = {
   aws: "AWS (me-central-1, UAE)",
   azure: "Azure (UAE North)",
   gcp: "GCP (me-central1, Doha)",
-  onprem: "On-premise (client DC)",
+  onprem: "On-premise servers (client DC)",
+  vercel: "Vercel + Supabase/Neon (managed)",
+  lovable: "Lovable + Supabase (managed)",
+};
+
+export const TARGET_LABEL: Record<Target, string> = { ...HOSTING_LABEL, all: "All options (compare side by side)" };
+
+export const SHORT: Record<Hosting, string> = { aws: "AWS", azure: "Azure", gcp: "GCP", onprem: "On-premise", vercel: "Vercel", lovable: "Lovable" };
+
+/** Service names on the managed platforms, by "filter:option" first, then by filter. */
+const MANAGED_NAMES: Record<"vercel" | "lovable", Record<string, string>> = {
+  vercel: {
+    "sqlDb:postgres": "Neon Postgres (Vercel Marketplace)",
+    "sqlDb:mysql": "PlanetScale MySQL",
+    sqlDb: "External managed DB (not on platform)",
+    noSql: "MongoDB Atlas (Vercel Marketplace)",
+    cache: "Upstash Redis",
+    search: "Algolia / Upstash Search",
+    messaging: "Upstash QStash / Inngest",
+    objectStorage: "Vercel Blob",
+    loadBalancer: "Vercel Edge Network (built-in)",
+    apiGateway: "Vercel Routing Middleware",
+    cdnWaf: "Vercel Edge Network + Firewall",
+    identity: "Clerk / Auth.js",
+    secrets: "Vercel encrypted environment variables",
+    email: "Resend",
+  },
+  lovable: {
+    "sqlDb:postgres": "Supabase Postgres",
+    sqlDb: "External managed DB (not on platform)",
+    noSql: "Supabase Postgres JSONB",
+    cache: "Upstash Redis",
+    search: "Supabase full-text search",
+    messaging: "Supabase Queues (pgmq)",
+    objectStorage: "Supabase Storage",
+    loadBalancer: "Lovable hosting (built-in)",
+    apiGateway: "Supabase Edge Functions",
+    cdnWaf: "Lovable hosting CDN",
+    identity: "Supabase Auth",
+    secrets: "Supabase Vault / project secrets",
+    email: "Resend",
+  },
 };
 
 /** One selectable technology. `per` names the equivalent service on each hosting option. */
@@ -289,7 +336,7 @@ export interface Preset {
   id: string;
   label: string;
   architecture: ArchitectureStyle;
-  hosting: Hosting;
+  hosting: Target;
   selections: Selections;
 }
 
@@ -335,8 +382,18 @@ export function option(key: FilterKey, id: string): TechOption | undefined {
   return FILTERS.find((g) => g.id === key)?.options.find((o) => o.id === id);
 }
 
-export function serviceName(key: FilterKey, id: string, hosting: Hosting): string {
+export function serviceName(key: FilterKey, id: string, hosting: Hosting | "generic"): string {
   const o = option(key, id);
   if (!o) return "—";
+  if (hosting === "generic") return o.label;
+  if (hosting === "vercel" || hosting === "lovable") {
+    if (key === "backend") {
+      const ok = hosting === "vercel" ? ["node-nest", "python-fastapi"] : ["node-nest"];
+      return ok.includes(id) ? `${o.label} as ${hosting === "vercel" ? "Vercel Functions" : "Supabase Edge Functions"}` : "Not supported: host separately";
+    }
+    if (key === "mobile" && hosting === "lovable" && id !== "none") return "Separate build (Lovable is web-only)";
+    const m = MANAGED_NAMES[hosting];
+    return m[`${key}:${id}`] ?? m[key] ?? o.label;
+  }
   return o.per?.[hosting] ?? o.label;
 }
