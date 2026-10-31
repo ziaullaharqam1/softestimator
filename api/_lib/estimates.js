@@ -20,9 +20,11 @@ function env(name) {
 
 const sha256 = (s) => createHash("sha256").update(s).digest();
 
-export function passwordMatches(candidate) {
-  // Hash both sides so the comparison is constant-time regardless of length.
-  return timingSafeEqual(sha256(String(candidate ?? "")), sha256(env("ESTIMATES_PASSWORD")));
+export function credentialsMatch(username, password) {
+  // Hash both sides so each comparison is constant-time regardless of length; always check both.
+  const userOk = timingSafeEqual(sha256(String(username ?? "").trim().toLowerCase()), sha256(env("ESTIMATES_USERNAME").toLowerCase()));
+  const passOk = timingSafeEqual(sha256(String(password ?? "")), sha256(env("ESTIMATES_PASSWORD")));
+  return userOk && passOk;
 }
 
 function sign(exp) {
