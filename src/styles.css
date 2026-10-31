@@ -296,3 +296,21 @@ td.num, th.num { text-align: right; font-family: "IBM Plex Mono", monospace; whi
   border: 0;
   background: #c5cdd8;
 }
+
+/* Presentation builder */
+.presenter-filters details.filter-group { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 4px; }
+.presenter-filters summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text); padding: 8px 0 2px; }
+.presenter-filters fieldset.checks { border: 0; padding: 0; margin: 12px 0 0; }
+.presenter-filters legend { font-size: 12px; color: var(--muted); margin-bottom: 6px; padding: 0; }
+.presenter-filters label.check { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; color: var(--text); }
+.presenter-filters label.check input { width: auto; margin: 0; }
+.link-btn { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; font-size: 12px; padding: 0 4px; }
+.shot-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.shot-list li { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; align-items: center; }
+.shot-list img { width: 44px; height: 32px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); }
+.shot-list input { padding: 6px 8px; font-size: 12px; }
+.presenter > main, .presenter > aside { min-width: 0; }
+.deck-preview { width: 100%; max-height: 78vh; overflow: auto; border-radius: 12px; border: 1px solid var(--line); background: #e9edf2; }
+.deck-preview iframe { border: 0; display: block; background: #e9edf2; }
+.ghost-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+@media (max-width: 900px) { .presenter .kpis { grid-template-columns: repeat(2, 1fr); } }

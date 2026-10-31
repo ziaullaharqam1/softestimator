@@ -1,15 +1,16 @@
 import { useState } from "react";
 import EstimatorApp from "./EstimatorApp";
 import PlannerApp from "./planner/PlannerApp";
+import PresenterApp from "./presenter/PresenterApp";
 import { architectureBlurb, architectureLabel, type ArchitectureStyle } from "./architecture";
 
-type Section = "estimator" | "planner";
+type Section = "estimator" | "planner" | "presenter";
 
 export default function App() {
   const [section, setSection] = useState<Section>("estimator");
   const [architecture, setArchitecture] = useState<ArchitectureStyle>("microservices");
   const archName = architectureLabel(architecture);
-  const tabId = section === "estimator" ? "tab-estimator" : "tab-planner";
+  const tabId = `tab-${section}`;
 
   return (
     <div className="app">
@@ -62,6 +63,17 @@ export default function App() {
           >
             Delivery planner
           </button>
+          <button
+            type="button"
+            role="tab"
+            id="tab-presenter"
+            aria-selected={section === "presenter"}
+            aria-controls="workspace-panel"
+            tabIndex={section === "presenter" ? 0 : -1}
+            onClick={() => setSection("presenter")}
+          >
+            Presentation builder
+          </button>
         </nav>
 
         <div
@@ -71,11 +83,13 @@ export default function App() {
           aria-labelledby={tabId}
         >
           <h1>
-            {section === "estimator" ? "Stack, cluster & cloud cost planner" : "RFP & delivery document planner"}
+            {section === "estimator" ? "Stack, cluster & cloud cost planner" : section === "planner" ? "RFP & delivery document planner" : "Canva-ready presentation builder"}
             <span className="arch-pill">{archName}</span>
           </h1>
           <p className="lede">
-            {section === "estimator"
+            {section === "presenter"
+              ? "Pick the architecture and technologies (database, language, load balancer, gateway, cache, messaging…), add the submitted description and screenshots, then download a costed deck as PPTX for Canva or PDF, with or without the client logo."
+              : section === "estimator"
               ? architecture === "microservices"
                 ? "Size a microservice stack from TPS: EKS / AKS / GKE versus EC2, Azure VM, and Compute Engine fleets (AED / month), plus on-prem Kubernetes nodes."
                 : "Size a monolithic 3-tier stack from TPS: presentation, application, and data VMs on EC2 / Azure VM / Compute Engine (AED / month), plus on-prem racks. No Kubernetes control plane."
@@ -83,7 +97,13 @@ export default function App() {
                 ? "Turn a briefing into NDA, MSA, invoices, RFP Excel, SOW, BOQ, HLD/LLD, tests, Gantt, Kubernetes infrastructure, and a proposal deck. Architecture covers software, network, security, database, reporting, BI, and complaints handling."
                 : "Turn a briefing into NDA, MSA, invoices, RFP Excel, SOW, BOQ, HLD/LLD, tests, Gantt, 3-tier VM infrastructure, and a proposal deck. Architecture covers software, network, security, database, reporting, BI, and complaints handling."}
           </p>
-          {section === "estimator" ? <EstimatorApp architecture={architecture} /> : <PlannerApp architecture={architecture} />}
+          {section === "estimator" ? (
+            <EstimatorApp architecture={architecture} />
+          ) : section === "planner" ? (
+            <PlannerApp architecture={architecture} />
+          ) : (
+            <PresenterApp architecture={architecture} onArchitecture={setArchitecture} />
+          )}
         </div>
       </div>
     </div>
